@@ -5,6 +5,7 @@ import Adafruit_DHT
 import mysql.connector as mariadb
 from smtplib import SMTP
 from email.message import EmailMessage
+import re
 
 DHT_SENSOR = Adafruit_DHT.DHT22
 DHT_PIN = 4
@@ -15,7 +16,24 @@ print("connection save")
 
 humidity, temperature = Adafruit_DHT.read_retry(DHT_SENSOR, DHT_PIN)
 
-if humidity is not None and temperature is not None:
+
+def validate(input):
+
+    inputstr  = str(input)
+    reg = "^[0-9]+\.?[0-9]*$"
+    x = False
+    pat = re.compile(reg)
+    mat = re.search(pat, inputstr)
+    if mat:
+        print("Passwd is valid")
+        x = True
+        return x
+    else:
+        print("not valid")
+        return x
+
+
+if validate(humidity) == True and validate(temperature) == True:
     
     now = datetime.now()
     timestamp = datetime.timestamp(now)
