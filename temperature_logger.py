@@ -48,10 +48,10 @@ if validate(humidity) == True and validate(temperature) == True:
 else:
     print("Failed to retrieve data from humidity sensor")
 
-SENDER = 'rasp_logger@gmx.at'
-RECIPENT = 'werner.haingartner@gmail.com'
+SENDER = 'monitoring@gmx.at'
+RECIPENT = 'example.test@gmail.com'
 SMTP_USER = SENDER
-SMTP_PASS = 'Trz/2vsC'
+SMTP_PASS = '********'
 SMTP_HOST = 'mail.gmx.net'
 SMTP_PORT = '587'
 
