@@ -7,16 +7,23 @@ from smtplib import SMTP
 from email.message import EmailMessage
 import re
 
+#defines the sensor and the pin where he is connected to
 DHT_SENSOR = Adafruit_DHT.DHT22
 DHT_PIN = 4
 
+#connects to database
 mariadb_connection = mariadb.connect(host='localhost', user='werner', password='Scripting', database='templogger')
 cursor = mariadb_connection.cursor()
-print("connection save")
 
+#variables from the sensor
 humidity, temperature = Adafruit_DHT.read_retry(DHT_SENSOR, DHT_PIN)
 
+#date and time at the moment in correct format 
+now = datetime.now()
+formatted_date = now.strftime('%Y-%m-%d')
+formatted_time = now.strftime('%H:%M:%S')
 
+#function for validating the values
 def validate(input):
 
     inputstr  = str(input)
@@ -25,33 +32,33 @@ def validate(input):
     pat = re.compile(reg)
     mat = re.search(pat, inputstr)
     if mat:
-        print("Passwd is valid")
+        print("Value is valid")
         x = True
         return x
     else:
-        print("not valid")
+        print("Value is not valid")
         return x
 
-
+#stores values to database
 if validate(humidity) == True and validate(temperature) == True:
-    
-    now = datetime.now()
-    timestamp = datetime.timestamp(now)
-    print(timestamp)
-
-    formatted_date = now.strftime('%Y-%m-%d')
-    formatted_time = now.strftime('%H:%M:%S')
-    cursor.execute("INSERT INTO full(Date,Time,Temperature, Humidity) VALUES (%s, %s, %s, %s)",(formatted_date, formatted_time, temperature, humidity))
-    mariadb_connection.commit()
     print("Temp: ",(temperature))
     print("Hum: ",(humidity))
+    try:
+        cursor.execute("INSERT INTO full(Date,Time,Temperature, Humidity) VALUES (%s, %s, %s, %s)",(formatted_date, formatted_time, temperature, humidity))
+        mariadb_connection.commit()
+        print("data successfully stored to database")
+    except Exception as e:
+        print("error while db operation: ", e)
+        mariadb_connection.rollback()
+    mariadb_connection.close()
 else:
-    print("Failed to retrieve data from humidity sensor")
+    print("Failed to retrieve right data from humidity sensor")
 
-SENDER = 'monitoring@gmx.at'
-RECIPENT = 'example.test@gmail.com'
+#defines parameters for sending an e-mail
+SENDER = 'rasp_logger@gmx.at'
+RECIPENT = 'werner.haingartner@gmail.com'
 SMTP_USER = SENDER
-SMTP_PASS = '********'
+SMTP_PASS = 'Trz/2vsC'
 SMTP_HOST = 'mail.gmx.net'
 SMTP_PORT = '587'
 
@@ -63,6 +70,7 @@ msg['Subject'] = 'Temperaturwarnung'
 msg['From'] = SENDER
 msg['To'] = RECIPENT
 
+#logic for sending mail if temperature gets too high
 if temperature > 25:
     try:
         with SMTP(host=SMTP_HOST, port=SMTP_PORT) as smtp:
@@ -74,5 +82,5 @@ if temperature > 25:
         print(e)
         exit(1)
 else:
-    print("no warning sent per mail")
+    print("no warning sent per mail, temperature is OK")
 
